@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>AI Voice Agent</title>
+  <style>
+    /* Global Styling */
+    body {
+      background: #f6bdd0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 40px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    h1 {
+      font-size: 32px;
+      color: #c2185b;
+      margin-bottom: 10px;
+    }
+
+    h2 {
+      font-size: 26px;
+      color: #ad1457;
+      margin-bottom: 15px;
+    }
+
+    h3 {
+      font-size: 22px;
+      color: #ad1457;
+      margin-bottom: 10px;
+    }
+
+    p {
+      font-size: 16px;
+      color: #555;
+    }
+
+    .section {
+      background: linear-gradient(to bottom right, #ffe6f0, #ffffff);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+      border-radius: 20px;
+      padding: 30px;
+      margin: 30px 0;
+      width: 100%;
+      max-width: 600px;
+      text-align: center;
+    }
+
+    input[type="text"] {
+      padding: 14px 20px;
+      font-size: 16px;
+      width: 70%;
+      max-width: 320px;
+      border: 2px solid #fe3078;
+      border-radius: 12px;
+      margin-bottom: 15px;
+      background: #fff;
+      transition: border-color 0.3s;
+    }
+
+    input[type="text"]:focus {
+      border-color: #ec407a;
+      outline: none;
+    }
+
+    button {
+      padding: 12px 24px;
+      font-size: 16px;
+      background: #ef0f5a;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      margin: 8px 5px;
+      transition: background 0.3s, transform 0.2s;
+    }
+
+    button:hover {
+      background: #ec115a;
+      transform: translateY(-2px);
+    }
+
+    button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    audio {
+      margin-top: 20px;
+      width: 100%;
+      max-width: 480px;
+      outline: none;
+      border-radius: 8px;
+    }
+
+    #status-text,
+    #transcription-text,
+    #ai-status-text {
+      font-style: italic;
+      color: #777;
+      font-size: 15px;
+      margin: 10px 0;
+    }
+
+    .conversation-display {
+      background: #f8f9fa;
+      border-radius: 10px;
+      padding: 15px;
+      margin: 15px 0;
+      text-align: left;
+      max-width: 100%;
+      word-wrap: break-word;
+    }
+
+    .conversation-display strong {
+      color: #c2185b;
+    }
+
+    @media (max-width: 600px) {
+      input[type="text"] {
+        width: 90%;
+      }
+
+      .section {
+        padding: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <h1>🎙️ AI Voice Agent Platform</h1>
+  <p>Complete voice interaction with text-to-speech, voice recording, transcription, and AI conversation</p>
+
+  <!-- Text-to-Speech Section -->
+  <div class="section">
+    <h2>🎙️ Murf AI Voice Agent</h2>
+    <p id="status-text">Enter text to convert into audio</p>
+    <input type="text" id="text-input" placeholder="Type something like 'Hello world'" />
+    <br />
+    <button id="submit-button">Generate Audio</button>
+    <audio id="audio-player" controls style="display:none;"></audio>
+  </div>
+
+  <!-- Echo Bot Section -->
+  <div class="section">
+    <h2>🎧 Echo Bot v2 (Murf Voice)</h2>
+    <p>Record your voice and hear it back in Murf's professional voice</p>
+    <button id="record-btn">🎤 Record</button>
+    <button id="stop-btn" disabled>🛑 Stop</button>
+    <audio id="echo-audio" controls style="display:none;"></audio>
+    <p id="transcription-text">Click Record to start</p>
+  </div>
+
+  <!-- NEW: AI Conversation Section -->
+  <div class="section">
+    <h2>🤖 AI Conversation</h2>
+    <p>Have natural voice conversations with AI. Ask questions using your voice and get intelligent responses spoken back to you.</p>
+    
+    <button id="ai-record-btn">🎤 Ask AI Question</button>
+    <button id="ai-stop-btn" disabled>🛑 Stop Recording</button>
+    
+    <audio id="ai-audio" controls style="display:none;"></audio>
+    <p id="ai-status-text">Ready to start a conversation. Click 'Ask AI Question' to begin.</p>
+    
+    <div id="conversation-display" style="display:none;">
+      <div class="conversation-display">
+        <div id="user-question-display"></div>
+        <div id="ai-response-display"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/script.js"></script>
+</body>
+</html>
