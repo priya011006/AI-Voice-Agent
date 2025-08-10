@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # 30 Days of AI Voice Agents
 
 This repository documents my 30-day challenge of building AI-powered voice agents using **FastAPI**, **Murf TTS**, and **AssemblyAI**.  
@@ -146,3 +147,6 @@ uvicorn main:app --reload
 - Murf (Text-to-Speech)
 - Google Gemini (LLM)
 - JavaScript, HTML, CSS (Frontend)
+=======
+# AI-Voice-Agent
+>>>>>>> 9024da1aaa8542f54cbbddffd2acfffdd9137e21
