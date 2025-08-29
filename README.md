@@ -1,126 +1,49 @@
+# 🎙️ Pixie AI Voice Agent
 
-# 30 Days of AI Voice Agents
+[![Python](https://img.shields.io/badge/Python-3.10-blue?logo=python)](https://www.python.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-Backend-green?logo=fastapi)](https://fastapi.tiangolo.com/)
+[![Render](https://img.shields.io/badge/Render-Deployed-blueviolet?logo=render)](https://render.com/)
+[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-This repository documents my 30-day challenge of building AI-powered voice agents using **FastAPI**, **Murf TTS**, and **AssemblyAI**.  
-Each day, I focus on implementing a new feature or improvement, sharing my progress along the way.
-
-## 🚀 Deployment to Render.com
-
-### Quick Deployment Steps
-
-1. Sign up for a [Render account](https://render.com/)
-2. Create a new Web Service and connect your GitHub repository
-3. Configure the following settings:
-   - **Environment**: Python
-   - **Build Command**: `pip install -r requirements.txt`
-   - **Start Command**: `uvicorn main:app --host 0.0.0.0 --port $PORT`
-4. Set the required environment variables in your Render dashboard:
-   - `GEMINI_API_KEY`: Your Google Gemini API key
-   - `ASSEMBLYAI_API_KEY`: Your AssemblyAI API key
-   - `MURF_API_KEY`: Your Murf API key
-   - `TAVILY_API_KEY`: Your Tavily API key
+An **AI-powered Voice Agent** that converts text to speech, transcribes audio, and enables real-time interaction using modern AI APIs. Built with **FastAPI**, deployed on **Render**, and integrated with **Murf**, **AssemblyAI**, and **Gemini APIs**.
 
 ---
 
-## 🛠 Tech Stack
-- **Backend**: FastAPI (Python)
-- **Frontend**: HTML, CSS, JavaScript
-- **TTS (Text-to-Speech)**: Murf.ai API / Murf Python SDK
-- **Speech-to-Text (Transcription)**: AssemblyAI API
-- **Version Control**: Git & GitHub
+## 🛠️ Tech Stack
+
+- **Backend**: FastAPI, Uvicorn, Gunicorn  
+- **Frontend**: HTML, CSS, JavaScript  
+- **APIs**: Murf (TTS), AssemblyAI (STT), Gemini (LLM), Tavily (Search)  
+- **Deployment**: Render (Free Plan)  
+- **Version Control**: Git & GitHub  
 
 ---
 
-## 📅 Progress Log
+## ✨ Features
 
-### **Day 1** — FastAPI Setup & Serving HTML
-- Set up a basic FastAPI project.
-- Served an HTML template with basic UI.
-- Folder structure created:
-
-
----
-
-### **Day 2** — TTS REST API Call with Murf
-- Integrated Murf.ai API using the Murf Python SDK.
-- Created `/generate-audio/` POST endpoint.
-- Generated audio from user text input and returned an audio URL.
+- 🔊 **Text-to-Speech** using Murf API  
+- 🎧 **Speech-to-Text** transcription via AssemblyAI  
+- 🤖 **Conversational AI** powered by Google Gemini  
+- ⚡ **Real-time WebSocket** support for live interaction  
+- 🌐 **Full-stack integration** with FastAPI backend and JS frontend  
 
 ---
 
-### **Day 3** — Real-time TTS Playback
-- Sent text from the frontend to the backend.
-- Played the generated audio instantly in the browser.
-- Improved UI design with clean and modern styling.
+## 🚀 Getting Started
 
----
+### 1. Clone the Repository
 
-### **Day 4** — Echo Bot Recording & Playback
-- Added a voice recorder in the UI.
-- Created `/upload-audio/` endpoint to receive recorded audio.
-- Saved uploaded audio in `/uploads` folder.
-- Played back the same audio as an echo.
-
----
-
-### **Day 5** — Audio Upload Metadata
-- Enhanced `/upload-audio/` to return:
-- File name
-- Content type
-- File size (KB)
-- Displayed metadata in the UI after upload.
-
----
-### **Day 6** — Audio Transcription from Binary
-- Created `/transcribe/file` endpoint.
-- Accepted recorded audio directly as binary without saving to disk.
-- Used **AssemblyAI API** to transcribe audio.
-- Returned the transcription to the frontend.
-
----
-
-### **Day 7** — Transcription Display in UI & TTS Echo Bot
-- Improved UI to **display transcription neatly below the Echo Bot** section.
-- Added transcription card with clear heading and style.
-- Automatically shows:
-  - "Transcribing..." while processing.
-  - Final transcription result when ready.
-- Implemented Echo Bot: uploaded audio is transcribed and then spoken back using Murf TTS.
-
----
-
-### **Day 8** — Large Language Model (LLM) Integration
-- Added a new `/llm/query` POST endpoint to the backend.
-- Integrated with **Google Gemini API** for LLM-powered text generation.
-- The endpoint accepts text prompts and returns LLM responses.
-- No UI changes needed; backend is ready for advanced conversational AI.
-
----
-
-Absolutely! Here's your Day 9 README update in the same clean and consistent format:
-
----
-
-### **Day 9** — Full Non-Streaming Voice Agent Pipeline  
-- Upgraded `/llm/query` endpoint to **accept audio input** directly.  
-- On "Stop recording" click:  
-- Audio is sent to backend for transcription.  
-- Transcribed text is passed to **Google Gemini API** for LLM response.  
-- LLM response is converted to speech using **Murf TTS**.  
-- Final audio response is returned and played in the `<audio>` element on the UI.  
-- Achieved a complete voice interaction loop — from user speech to LLM reply, all spoken back with Murf voice.  
-
----
-
-
-
- ## 🚀 Running the Project Locally
-
-### **Clone the repository**
 ```bash
-git clone https://github.com/yourusername/30-days-ai-voice-agents.git
-cd 30-days-ai-voice-agents
-```
+git clone https://github.com/priya011006/AI-Voice-Agent.git
+cd AI-Voice-Agent
+
+---
+
+### 2. Create the virtual environment
+python -m venv venv
+source venv/bin/activate   # for Linux/Mac
+venv\Scripts\activate      # for Windows
+
 
 ### **Install dependencies**
 ```bash
@@ -130,10 +53,11 @@ pip install -r requirements.txt
 ### **Set up environment variables**
 Create a `.env` file in the project root with the following:
 ```env
-ASSEMBLYAI_API_KEY=your-assemblyai-api-key
-MURF_API_KEY=your-murf-api-key
-GEMINI_API_KEY=your-gemini-api-key
-```
+GEMINI_API_KEY=your_gemini_api_key
+ASSEMBLYAI_API_KEY=your_assemblyai_api_key
+MURF_API_KEY=your_murf_api_key
+TAVILY_API_KEY=your_tavily_api_key
+
 *(Do not share your API keys publicly.)*
 
 ### **Run the FastAPI server**
@@ -155,12 +79,55 @@ uvicorn main:app --reload
 
 ---
 
-## 💡 Tech Used
+##📂 Project Structure
 
-- FastAPI & Python
-- AssemblyAI (Speech-to-Text)
-- Murf (Text-to-Speech)
-- Google Gemini (LLM)
-- JavaScript, HTML, CSS (Frontend)
+.
+├── main.py                # FastAPI app
+├── requirements.txt       # Dependencies
+├── Procfile               # Deployment entrypoint
+├── render.yaml            # Render deployment config
+├── static/                # Frontend JS/CSS
+│   └── script.js
+├── templates/             # HTML templates
+│   ├── index.html
+│   └── websocket.html
+├── uploads/               # Audio uploads
+└── .env                   # Environment variables (ignored in git)
+
+## 🚀 Deployment to Render.com
+
+### Quick Deployment Steps
+
+1. Sign up for a [Render account](https://render.com/)
+2. Create a new Web Service and connect your GitHub repository
+3. Configure the following settings:
+   - **Environment**: Python
+   - **Build Command**: `pip install -r requirements.txt`
+   - **Start Command**: `uvicorn main:app --host 0.0.0.0 --port $PORT`
+4. Set the required environment variables in your Render dashboard:
+   - `GEMINI_API_KEY`: Your Google Gemini API key
+   - `ASSEMBLYAI_API_KEY`: Your AssemblyAI API key
+   - `MURF_API_KEY`: Your Murf API key
+   - `TAVILY_API_KEY`: Your Tavily API key
+
+---
+)
+
+##🤝 Contributing
+
+Pull requests and suggestions are welcome!
+
+
+
+##📜 License
+
+This project is licensed under the MIT License.
+
+---
+
+⚡Pro tip: After pasting this into `README.md`, preview it in VS Code (right-click → **Open Preview**) to see how it will look on GitHub.  
+
+Do you want me to also add **GitHub-style badges** (Python, FastAPI, Render, License, etc.) at the top for extra polish?
+
 
 # AI-Voice-Agent
