@@ -37,28 +37,40 @@ document.getElementById("submit-button").addEventListener("click", async () => {
 let mediaRecorder;
 let audioChunks = [];
 let isRecording = false;
+let lastStream = null;
 
 const recordBtn = document.getElementById("record-btn");
 const stopBtn = document.getElementById("stop-btn");
 const echoAudio = document.getElementById("echo-audio");
 const transcriptionText = document.getElementById("transcription-text");
 
+async function startLocalRecording(onStopCallback, fileName = "recording.webm") {
+  const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+  lastStream = stream;
+  const mr = new MediaRecorder(stream);
+  let chunks = [];
+
+  mr.ondataavailable = (e) => {
+    if (e.data && e.data.size > 0) chunks.push(e.data);
+  };
+
+  mr.onstop = async () => {
+    const audioBlob = new Blob(chunks, { type: "audio/webm" });
+    const file = new File([audioBlob], fileName, { type: "audio/webm" });
+    // release tracks
+    try { stream.getTracks().forEach(t => t.stop()); } catch(e){}
+    onStopCallback(file);
+  };
+
+  mr.start();
+  return mr;
+}
+
 recordBtn.addEventListener("click", async () => {
   if (isRecording) return;
 
   try {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    mediaRecorder = new MediaRecorder(stream);
-    audioChunks = [];
-
-    mediaRecorder.ondataavailable = (e) => {
-      if (e.data && e.data.size > 0) audioChunks.push(e.data);
-    };
-
-    mediaRecorder.onstop = async () => {
-      const audioBlob = new Blob(audioChunks, { type: "audio/webm" });
-      const file = new File([audioBlob], "recording.webm", { type: "audio/webm" });
-
+    mediaRecorder = await startLocalRecording(async (file) => {
       const formData = new FormData();
       formData.append("file", file);
 
@@ -89,9 +101,8 @@ recordBtn.addEventListener("click", async () => {
         console.error("Echo Bot Error:", error);
         transcriptionText.innerText = "❌ Failed to process audio. See console.";
       }
-    };
+    });
 
-    mediaRecorder.start();
     isRecording = true;
     recordBtn.disabled = true;
     stopBtn.disabled = false;
@@ -103,7 +114,7 @@ recordBtn.addEventListener("click", async () => {
 });
 
 stopBtn.addEventListener("click", () => {
-  if (!isRecording) return;
+  if (!isRecording || !mediaRecorder) return;
   mediaRecorder.stop();
   isRecording = false;
   recordBtn.disabled = false;
@@ -111,10 +122,11 @@ stopBtn.addEventListener("click", () => {
   transcriptionText.innerText = "⏳ Processing...";
 });
 
-// ================= NEW: AI Conversation (Day 9) =================
+// ================= NEW: AI Conversation (Day 9 -> Day 10 update) =================
 let aiMediaRecorder;
 let aiAudioChunks = [];
 let isAIRecording = false;
+let lastAIStream = null;
 
 const aiRecordBtn = document.getElementById("ai-record-btn");
 const aiStopBtn = document.getElementById("ai-stop-btn");
@@ -124,11 +136,26 @@ const conversationDisplay = document.getElementById("conversation-display");
 const userQuestionDisplay = document.getElementById("user-question-display");
 const aiResponseDisplay = document.getElementById("ai-response-display");
 
-aiRecordBtn.addEventListener("click", async () => {
-  if (isAIRecording) return;
+// Helper: get or create session id in URL query
+function getSessionId() {
+  const urlParams = new URLSearchParams(window.location.search);
+  let session = urlParams.get('session');
+  if (!session) {
+    session = Math.random().toString(36).substring(2, 10);
+    urlParams.set('session', session);
+    const newUrl = `${location.pathname}?${urlParams.toString()}`;
+    window.history.replaceState({}, '', newUrl);
+  }
+  return session;
+}
 
+const SESSION_ID = getSessionId();
+
+// Start recording helper (for AI conversation) — re-usable for auto-start
+async function startAIRecording(fileName = "ai_question.webm") {
   try {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    lastAIStream = stream;
     aiMediaRecorder = new MediaRecorder(stream);
     aiAudioChunks = [];
 
@@ -138,7 +165,7 @@ aiRecordBtn.addEventListener("click", async () => {
 
     aiMediaRecorder.onstop = async () => {
       const audioBlob = new Blob(aiAudioChunks, { type: "audio/webm" });
-      const file = new File([audioBlob], "ai_question.webm", { type: "audio/webm" });
+      const file = new File([audioBlob], fileName, { type: "audio/webm" });
 
       const formData = new FormData();
       formData.append("file", file);
@@ -146,7 +173,7 @@ aiRecordBtn.addEventListener("click", async () => {
       aiStatusText.innerText = "🧠 Processing your question with AI...";
 
       try {
-        const resp = await fetch("/llm/voice-query/", {
+        const resp = await fetch(`/agent/chat/${SESSION_ID}`, {
           method: "POST",
           body: formData,
         });
@@ -162,19 +189,38 @@ aiRecordBtn.addEventListener("click", async () => {
         conversationDisplay.style.display = "block";
         userQuestionDisplay.innerHTML = `<strong>Your Question:</strong> ${result.transcript}`;
         aiResponseDisplay.innerHTML = `<strong>AI Response:</strong> ${result.response}`;
-        
+
         aiStatusText.innerText = "✅ Conversation complete! Ask another question anytime.";
-        
-        // Play AI response audio
+
+        // Play AI response audio and after it ends, auto-start recording again
         if (result.audio_url) {
           aiAudio.src = result.audio_url;
           aiAudio.style.display = "block";
           aiAudio.oncanplay = () => aiAudio.play().catch(()=>{});
+
+          // when finished playing — start a new recording automatically
+          aiAudio.onended = () => {
+            // small delay to ensure UI updates & avoid immediate re-trigger issues
+            setTimeout(() => {
+              // auto start recording again
+              aiRecordBtn.disabled = true;
+              aiStopBtn.disabled = false;
+              aiStatusText.innerText = "🎙️ Listening for your next question...";
+              startAIRecording();
+            }, 700);
+          };
         }
+
       } catch (error) {
         console.error("AI Conversation Error:", error);
         aiStatusText.innerText = "❌ Failed to process AI conversation. See console.";
       }
+
+      // release microphone tracks
+      try { lastAIStream.getTracks().forEach(t => t.stop()); } catch(e){}
+      isAIRecording = false;
+      aiRecordBtn.disabled = false;
+      aiStopBtn.disabled = true;
     };
 
     aiMediaRecorder.start();
@@ -182,17 +228,26 @@ aiRecordBtn.addEventListener("click", async () => {
     aiRecordBtn.disabled = true;
     aiStopBtn.disabled = false;
     aiStatusText.innerText = "🎙️ Recording your question...";
+
   } catch (err) {
     console.error("AI Recording Error:", err);
     aiStatusText.innerText = "⚠️ Mic permission required for AI conversation.";
   }
+}
+
+aiRecordBtn.addEventListener("click", async () => {
+  if (isAIRecording) return;
+  await startAIRecording();
 });
 
 aiStopBtn.addEventListener("click", () => {
-  if (!isAIRecording) return;
+  if (!isAIRecording || !aiMediaRecorder) return;
   aiMediaRecorder.stop();
-  isAIRecording = false;
-  aiRecordBtn.disabled = false;
-  aiStopBtn.disabled = true;
+  // mic will be released in onstop handler
   aiStatusText.innerText = "⏳ Processing your question...";
 });
+
+// Optional: auto-open conversation panel if session exists
+if (SESSION_ID) {
+  console.log('Session ID:', SESSION_ID);
+}
