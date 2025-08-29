@@ -4,6 +4,22 @@
 This repository documents my 30-day challenge of building AI-powered voice agents using **FastAPI**, **Murf TTS**, and **AssemblyAI**.  
 Each day, I focus on implementing a new feature or improvement, sharing my progress along the way.
 
+## 🚀 Deployment to Render.com
+
+### Quick Deployment Steps
+
+1. Sign up for a [Render account](https://render.com/)
+2. Create a new Web Service and connect your GitHub repository
+3. Configure the following settings:
+   - **Environment**: Python
+   - **Build Command**: `pip install -r requirements.txt`
+   - **Start Command**: `uvicorn main:app --host 0.0.0.0 --port $PORT`
+4. Set the required environment variables in your Render dashboard:
+   - `GEMINI_API_KEY`: Your Google Gemini API key
+   - `ASSEMBLYAI_API_KEY`: Your AssemblyAI API key
+   - `MURF_API_KEY`: Your Murf API key
+   - `TAVILY_API_KEY`: Your Tavily API key
+
 ---
 
 ## 🛠 Tech Stack

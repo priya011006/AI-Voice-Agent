@@ -2,177 +2,274 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>AI Voice Agent</title>
   <style>
     /* Global Styling */
+    * {
+      box-sizing: border-box;
+    }
+
     body {
-      background: #f6bdd0;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #fce4ec 0%, #f8bbd9 50%, #f48fb1 100%);
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
       margin: 0;
-      padding: 40px 20px;
+      padding: 0;
+      min-height: 100vh;
       display: flex;
       flex-direction: column;
       align-items: center;
+      justify-content: center;
+    }
+
+    .container {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border-radius: 25px;
+      box-shadow: 0 20px 40px rgba(194, 24, 91, 0.15);
+      padding: 40px;
+      width: 90%;
+      max-width: 500px;
+      text-align: center;
+      border: 1px solid rgba(255, 255, 255, 0.3);
     }
 
     h1 {
-      font-size: 32px;
+      font-size: 2.5rem;
       color: #c2185b;
       margin-bottom: 10px;
+      font-weight: 700;
+      text-shadow: 0 2px 4px rgba(194, 24, 91, 0.1);
     }
 
-    h2 {
-      font-size: 26px;
-      color: #ad1457;
-      margin-bottom: 15px;
+    .subtitle {
+      font-size: 1.1rem;
+      color: #7a4a6b;
+      margin-bottom: 40px;
+      font-weight: 400;
+      line-height: 1.5;
     }
 
-    h3 {
-      font-size: 22px;
-      color: #ad1457;
-      margin-bottom: 10px;
-    }
-
-    p {
-      font-size: 16px;
-      color: #555;
-    }
-
-    .section {
-      background: linear-gradient(to bottom right, #ffe6f0, #ffffff);
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
-      border-radius: 20px;
-      padding: 30px;
-      margin: 30px 0;
-      width: 100%;
-      max-width: 600px;
-      text-align: center;
-    }
-
-    input[type="text"] {
-      padding: 14px 20px;
-      font-size: 16px;
-      width: 70%;
-      max-width: 320px;
-      border: 2px solid #fe3078;
-      border-radius: 12px;
-      margin-bottom: 15px;
-      background: #fff;
-      transition: border-color 0.3s;
-    }
-
-    input[type="text"]:focus {
-      border-color: #ec407a;
-      outline: none;
-    }
-
-    button {
-      padding: 12px 24px;
-      font-size: 16px;
-      background: #ef0f5a;
-      color: white;
+    /* Recording Button */
+    .record-button {
+      position: relative;
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
       border: none;
-      border-radius: 10px;
+      background: linear-gradient(145deg, #e91e63, #c2185b);
+      color: white;
+      font-size: 2.5rem;
       cursor: pointer;
-      margin: 8px 5px;
-      transition: background 0.3s, transform 0.2s;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 8px 25px rgba(233, 30, 99, 0.3);
+      margin: 20px auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
     }
 
-    button:hover {
-      background: #ec115a;
-      transform: translateY(-2px);
+    .record-button:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 30px rgba(233, 30, 99, 0.4);
     }
 
-    button:disabled {
+    .record-button:active {
+      transform: translateY(-1px);
+    }
+
+    .record-button.recording {
+      background: linear-gradient(145deg, #ff1744, #d50000);
+      animation: pulse 1.5s infinite;
+    }
+
+    .record-button.processing {
+      background: linear-gradient(145deg, #ff9800, #f57c00);
+      animation: spin 2s linear infinite;
+    }
+
+    .record-button:disabled {
       background: #ccc;
       cursor: not-allowed;
       transform: none;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
     }
 
-    audio {
-      margin-top: 20px;
-      width: 100%;
-      max-width: 480px;
-      outline: none;
-      border-radius: 8px;
+    /* Animations */
+    @keyframes pulse {
+      0% {
+        box-shadow: 0 8px 25px rgba(255, 23, 68, 0.3), 0 0 0 0 rgba(255, 23, 68, 0.7);
+      }
+      70% {
+        box-shadow: 0 8px 25px rgba(255, 23, 68, 0.3), 0 0 0 15px rgba(255, 23, 68, 0);
+      }
+      100% {
+        box-shadow: 0 8px 25px rgba(255, 23, 68, 0.3), 0 0 0 0 rgba(255, 23, 68, 0);
+      }
     }
 
-    #status-text,
-    #transcription-text,
-    #ai-status-text {
-      font-style: italic;
-      color: #777;
-      font-size: 15px;
-      margin: 10px 0;
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
     }
 
-    .conversation-display {
-      background: #f8f9fa;
-      border-radius: 10px;
-      padding: 15px;
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Status Text */
+    .status-text {
+      font-size: 1.1rem;
+      color: #7a4a6b;
+      margin: 25px 0;
+      min-height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1.4;
+      font-weight: 500;
+    }
+
+    .status-text.error {
+      color: #d32f2f;
+    }
+
+    .status-text.success {
+      color: #388e3c;
+    }
+
+    .status-text.warning {
+      color: #f57c00;
+    }
+
+    /* Conversation Display */
+    .conversation-container {
+      margin-top: 30px;
+      animation: fadeIn 0.5s ease-out;
+    }
+
+    .conversation-item {
+      background: linear-gradient(145deg, #fce4ec, #f8bbd9);
+      border-radius: 15px;
+      padding: 20px;
       margin: 15px 0;
       text-align: left;
-      max-width: 100%;
-      word-wrap: break-word;
+      border-left: 4px solid #e91e63;
+      box-shadow: 0 4px 15px rgba(233, 30, 99, 0.1);
+      animation: fadeIn 0.5s ease-out;
     }
 
-    .conversation-display strong {
+    .conversation-item.user {
+      background: linear-gradient(145deg, #e1f5fe, #b3e5fc);
+      border-left-color: #0277bd;
+    }
+
+    .conversation-label {
+      font-weight: 700;
       color: #c2185b;
+      margin-bottom: 8px;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
 
+    .conversation-item.user .conversation-label {
+      color: #0277bd;
+    }
+
+    .conversation-content {
+      color: #424242;
+      line-height: 1.5;
+      font-size: 1rem;
+    }
+
+    .fallback-indicator {
+      font-style: italic;
+      color: #ff6b6b;
+      font-size: 0.9rem;
+      margin-top: 8px;
+    }
+
+    /* Session Info */
+    .session-info {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: rgba(255, 255, 255, 0.9);
+      padding: 10px 15px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      color: #7a4a6b;
+      backdrop-filter: blur(5px);
+      border: 1px solid rgba(233, 30, 99, 0.2);
+    }
+
+    /* Hidden Audio */
+    .hidden-audio {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    /* Responsive Design */
     @media (max-width: 600px) {
-      input[type="text"] {
-        width: 90%;
+      .container {
+        margin: 20px;
+        padding: 30px 25px;
       }
 
-      .section {
-        padding: 20px;
+      h1 {
+        font-size: 2rem;
       }
+
+      .record-button {
+        width: 100px;
+        height: 100px;
+        font-size: 2rem;
+      }
+
+      .session-info {
+        position: static;
+        margin: 20px auto 0;
+        display: inline-block;
+      }
+    }
+
+    /* Smooth transitions for all interactive elements */
+    * {
+      transition: all 0.3s ease;
     }
   </style>
 </head>
 <body>
-
-  <!-- Header -->
-  <h1>🎙️ AI Voice Agent Platform</h1>
-  <p>Complete voice interaction with text-to-speech, voice recording, transcription, and AI conversation</p>
-
-  <!-- Text-to-Speech Section -->
-  <div class="section">
-    <h2>🎙️ Murf AI Voice Agent</h2>
-    <p id="status-text">Enter text to convert into audio</p>
-    <input type="text" id="text-input" placeholder="Type something like 'Hello world'" />
-    <br />
-    <button id="submit-button">Generate Audio</button>
-    <audio id="audio-player" controls style="display:none;"></audio>
+  <div class="session-info">
+    <span id="session-display">Session: Loading...</span>
   </div>
 
-  <!-- Echo Bot Section -->
-  <div class="section">
-    <h2>🎧 Echo Bot v2 (Murf Voice)</h2>
-    <p>Record your voice and hear it back in Murf's professional voice</p>
-    <button id="record-btn">🎤 Record</button>
-    <button id="stop-btn" disabled>🛑 Stop</button>
-    <audio id="echo-audio" controls style="display:none;"></audio>
-    <p id="transcription-text">Click Record to start</p>
-  </div>
-
-  <!-- NEW: AI Conversation Section -->
-  <div class="section">
-    <h2>🤖 AI Conversation</h2>
-    <p>Have natural voice conversations with AI. Ask questions using your voice and get intelligent responses spoken back to you.</p>
+  <div class="container">
+    <h1>🎙️ AI Voice Agent</h1>
+    <p class="subtitle">Have natural conversations with AI using your voice. Click the button below to start talking!</p>
     
-    <button id="ai-record-btn">🎤 Ask AI Question</button>
-    <button id="ai-stop-btn" disabled>🛑 Stop Recording</button>
+    <button id="main-record-btn" class="record-button">
+      <span id="button-icon">🎤</span>
+    </button>
     
-    <audio id="ai-audio" controls style="display:none;"></audio>
-    <p id="ai-status-text">Ready to start a conversation. Click 'Ask AI Question' to begin.</p>
+    <div id="status-text" class="status-text">
+      Ready to start a conversation. Click the microphone to begin.
+    </div>
     
-    <div id="conversation-display" style="display:none;">
-      <div class="conversation-display">
-        <div id="user-question-display"></div>
-        <div id="ai-response-display"></div>
-      </div>
+    <audio id="ai-audio" class="hidden-audio"></audio>
+    
+    <div id="conversation-container" class="conversation-container" style="display: none;">
+      <!-- Conversation items will be dynamically added here -->
     </div>
   </div>
 

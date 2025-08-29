@@ -1,142 +1,27 @@
-// ================= Text-to-Speech (Generate Audio) =================
-document.getElementById("submit-button").addEventListener("click", async () => {
-  const textInput = document.getElementById("text-input").value.trim();
-  const audioPlayer = document.getElementById("audio-player");
-  const statusText = document.getElementById("status-text");
-
-  if (!textInput) {
-    statusText.textContent = "⚠️ Please enter some text.";
-    return;
-  }
-
-  statusText.textContent = "🎤 Generating audio...";
-
-  try {
-    const response = await fetch("/generate-audio/", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text: textInput }),
-    });
-
-    if (!response.ok) {
-      const err = await response.json().catch(() => ({}));
-      throw new Error(err.error || "Failed to generate audio.");
-    }
-
-    const result = await response.json();
-    audioPlayer.src = result.audio_url;
-    audioPlayer.style.display = "block";
-    statusText.textContent = "✅ Audio generated successfully!";
-  } catch (error) {
-    console.error("TTS Error:", error);
-    statusText.textContent = "❌ Failed to generate audio. See console.";
-  }
-});
-
-// ================= Echo Bot v2 (Recording → Transcribe → Murf → Play) =================
+// ================= Modern AI Voice Agent =================
 let mediaRecorder;
-let audioChunks = [];
 let isRecording = false;
+let isProcessing = false;
 let lastStream = null;
+let conversationHistory = [];
 
-const recordBtn = document.getElementById("record-btn");
-const stopBtn = document.getElementById("stop-btn");
-const echoAudio = document.getElementById("echo-audio");
-const transcriptionText = document.getElementById("transcription-text");
-
-async function startLocalRecording(onStopCallback, fileName = "recording.webm") {
-  const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-  lastStream = stream;
-  const mr = new MediaRecorder(stream);
-  let chunks = [];
-
-  mr.ondataavailable = (e) => {
-    if (e.data && e.data.size > 0) chunks.push(e.data);
-  };
-
-  mr.onstop = async () => {
-    const audioBlob = new Blob(chunks, { type: "audio/webm" });
-    const file = new File([audioBlob], fileName, { type: "audio/webm" });
-    // release tracks
-    try { stream.getTracks().forEach(t => t.stop()); } catch(e){}
-    onStopCallback(file);
-  };
-
-  mr.start();
-  return mr;
-}
-
-recordBtn.addEventListener("click", async () => {
-  if (isRecording) return;
-
-  try {
-    mediaRecorder = await startLocalRecording(async (file) => {
-      const formData = new FormData();
-      formData.append("file", file);
-
-      transcriptionText.innerText = "⏳ Uploading, transcribing, and generating Murf audio...";
-
-      try {
-        const resp = await fetch("/tts/echo/", {
-          method: "POST",
-          body: formData,
-        });
-
-        if (!resp.ok) {
-          const err = await resp.json().catch(() => ({}));
-          throw new Error(err.error || "Echo bot failed");
-        }
-
-        const result = await resp.json();
-
-        transcriptionText.innerText = `📝 Transcription: ${result.transcript}`;
-        if (result.audio_url) {
-          echoAudio.src = result.audio_url;
-          echoAudio.style.display = "block";
-          echoAudio.oncanplay = () => echoAudio.play().catch(()=>{});
-        } else {
-          transcriptionText.innerText += " (No audio_url returned)";
-        }
-      } catch (error) {
-        console.error("Echo Bot Error:", error);
-        transcriptionText.innerText = "❌ Failed to process audio. See console.";
-      }
-    });
-
-    isRecording = true;
-    recordBtn.disabled = true;
-    stopBtn.disabled = false;
-    transcriptionText.innerText = "🎙️ Recording...";
-  } catch (err) {
-    console.error("Recording Error:", err);
-    transcriptionText.innerText = "⚠️ Mic permission denied or unavailable.";
-  }
-});
-
-stopBtn.addEventListener("click", () => {
-  if (!isRecording || !mediaRecorder) return;
-  mediaRecorder.stop();
-  isRecording = false;
-  recordBtn.disabled = false;
-  stopBtn.disabled = true;
-  transcriptionText.innerText = "⏳ Processing...";
-});
-
-// ================= NEW: AI Conversation (Day 9 -> Day 10 update) =================
-let aiMediaRecorder;
-let aiAudioChunks = [];
-let isAIRecording = false;
-let lastAIStream = null;
-
-const aiRecordBtn = document.getElementById("ai-record-btn");
-const aiStopBtn = document.getElementById("ai-stop-btn");
+// DOM Elements
+const mainRecordBtn = document.getElementById("main-record-btn");
+const buttonIcon = document.getElementById("button-icon");
+const statusText = document.getElementById("status-text");
 const aiAudio = document.getElementById("ai-audio");
-const aiStatusText = document.getElementById("ai-status-text");
-const conversationDisplay = document.getElementById("conversation-display");
-const userQuestionDisplay = document.getElementById("user-question-display");
-const aiResponseDisplay = document.getElementById("ai-response-display");
+const conversationContainer = document.getElementById("conversation-container");
+const sessionDisplay = document.getElementById("session-display");
 
-// Helper: get or create session id in URL query
+// Button States
+const ButtonState = {
+  READY: 'ready',
+  RECORDING: 'recording', 
+  PROCESSING: 'processing',
+  DISABLED: 'disabled'
+};
+
+// Session Management
 function getSessionId() {
   const urlParams = new URLSearchParams(window.location.search);
   let session = urlParams.get('session');
@@ -151,103 +36,269 @@ function getSessionId() {
 
 const SESSION_ID = getSessionId();
 
-// Start recording helper (for AI conversation) — re-usable for auto-start
-async function startAIRecording(fileName = "ai_question.webm") {
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    lastAIStream = stream;
-    aiMediaRecorder = new MediaRecorder(stream);
-    aiAudioChunks = [];
-
-    aiMediaRecorder.ondataavailable = (e) => {
-      if (e.data && e.data.size > 0) aiAudioChunks.push(e.data);
-    };
-
-    aiMediaRecorder.onstop = async () => {
-      const audioBlob = new Blob(aiAudioChunks, { type: "audio/webm" });
-      const file = new File([audioBlob], fileName, { type: "audio/webm" });
-
-      const formData = new FormData();
-      formData.append("file", file);
-
-      aiStatusText.innerText = "🧠 Processing your question with AI...";
-
-      try {
-        const resp = await fetch(`/agent/chat/${SESSION_ID}`, {
-          method: "POST",
-          body: formData,
-        });
-
-        if (!resp.ok) {
-          const err = await resp.json().catch(() => ({}));
-          throw new Error(err.error || "AI conversation failed");
-        }
-
-        const result = await resp.json();
-
-        // Display conversation
-        conversationDisplay.style.display = "block";
-        userQuestionDisplay.innerHTML = `<strong>Your Question:</strong> ${result.transcript}`;
-        aiResponseDisplay.innerHTML = `<strong>AI Response:</strong> ${result.response}`;
-
-        aiStatusText.innerText = "✅ Conversation complete! Ask another question anytime.";
-
-        // Play AI response audio and after it ends, auto-start recording again
-        if (result.audio_url) {
-          aiAudio.src = result.audio_url;
-          aiAudio.style.display = "block";
-          aiAudio.oncanplay = () => aiAudio.play().catch(()=>{});
-
-          // when finished playing — start a new recording automatically
-          aiAudio.onended = () => {
-            // small delay to ensure UI updates & avoid immediate re-trigger issues
-            setTimeout(() => {
-              // auto start recording again
-              aiRecordBtn.disabled = true;
-              aiStopBtn.disabled = false;
-              aiStatusText.innerText = "🎙️ Listening for your next question...";
-              startAIRecording();
-            }, 700);
-          };
-        }
-
-      } catch (error) {
-        console.error("AI Conversation Error:", error);
-        aiStatusText.innerText = "❌ Failed to process AI conversation. See console.";
-      }
-
-      // release microphone tracks
-      try { lastAIStream.getTracks().forEach(t => t.stop()); } catch(e){}
-      isAIRecording = false;
-      aiRecordBtn.disabled = false;
-      aiStopBtn.disabled = true;
-    };
-
-    aiMediaRecorder.start();
-    isAIRecording = true;
-    aiRecordBtn.disabled = true;
-    aiStopBtn.disabled = false;
-    aiStatusText.innerText = "🎙️ Recording your question...";
-
-  } catch (err) {
-    console.error("AI Recording Error:", err);
-    aiStatusText.innerText = "⚠️ Mic permission required for AI conversation.";
+// Update button appearance based on state
+function updateButtonState(state) {
+  mainRecordBtn.className = 'record-button';
+  
+  switch (state) {
+    case ButtonState.READY:
+      buttonIcon.textContent = "🎤";
+      mainRecordBtn.disabled = false;
+      statusText.className = "status-text";
+      statusText.textContent = "Click to start recording your question";
+      break;
+      
+    case ButtonState.RECORDING:
+      buttonIcon.textContent = "⏸️";
+      mainRecordBtn.classList.add('recording');
+      mainRecordBtn.disabled = false;
+      statusText.className = "status-text";
+      statusText.textContent = "🎙️ Recording... Click to stop";
+      break;
+      
+    case ButtonState.PROCESSING:
+      buttonIcon.textContent = "⏳";
+      mainRecordBtn.classList.add('processing');
+      mainRecordBtn.disabled = true;
+      statusText.className = "status-text";
+      statusText.textContent = "🧠 Processing your question with AI...";
+      break;
+      
+    case ButtonState.DISABLED:
+      buttonIcon.textContent = "❌";
+      mainRecordBtn.disabled = true;
+      statusText.className = "status-text error";
+      break;
   }
 }
 
-aiRecordBtn.addEventListener("click", async () => {
-  if (isAIRecording) return;
-  await startAIRecording();
-});
-
-aiStopBtn.addEventListener("click", () => {
-  if (!isAIRecording || !aiMediaRecorder) return;
-  aiMediaRecorder.stop();
-  // mic will be released in onstop handler
-  aiStatusText.innerText = "⏳ Processing your question...";
-});
-
-// Optional: auto-open conversation panel if session exists
-if (SESSION_ID) {
-  console.log('Session ID:', SESSION_ID);
+// Add conversation item to the display
+function addConversationItem(type, content, isFallback = false) {
+  const item = document.createElement('div');
+  item.className = `conversation-item ${type}`;
+  
+  const label = document.createElement('div');
+  label.className = 'conversation-label';
+  label.textContent = type === 'user' ? 'You said' : 'AI responded';
+  
+  const contentDiv = document.createElement('div');
+  contentDiv.className = 'conversation-content';
+  contentDiv.textContent = content;
+  
+  item.appendChild(label);
+  item.appendChild(contentDiv);
+  
+  if (isFallback) {
+    const fallbackDiv = document.createElement('div');
+    fallbackDiv.className = 'fallback-indicator';
+    fallbackDiv.textContent = '(Technical issues detected - using fallback)';
+    item.appendChild(fallbackDiv);
+  }
+  
+  conversationContainer.appendChild(item);
+  conversationContainer.style.display = 'block';
+  
+  // Scroll to bottom
+  setTimeout(() => {
+    item.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }, 100);
 }
+
+// Start recording
+async function startRecording() {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    lastStream = stream;
+    mediaRecorder = new MediaRecorder(stream);
+    let audioChunks = [];
+
+    mediaRecorder.ondataavailable = (e) => {
+      if (e.data && e.data.size > 0) audioChunks.push(e.data);
+    };
+
+    mediaRecorder.onstop = async () => {
+      try {
+        // Release microphone
+        stream.getTracks().forEach(t => t.stop());
+        
+        updateButtonState(ButtonState.PROCESSING);
+        
+        const audioBlob = new Blob(audioChunks, { type: "audio/webm" });
+        const file = new File([audioBlob], "question.webm", { type: "audio/webm" });
+        
+        await processAudioWithAI(file);
+        
+      } catch (error) {
+        console.error("Processing error:", error);
+        handleError(error);
+      }
+    };
+
+    mediaRecorder.start();
+    isRecording = true;
+    updateButtonState(ButtonState.RECORDING);
+    
+  } catch (err) {
+    console.error("Recording Error:", err);
+    handleMicrophoneError(err);
+  }
+}
+
+// Stop recording
+function stopRecording() {
+  if (mediaRecorder && isRecording) {
+    mediaRecorder.stop();
+    isRecording = false;
+  }
+}
+
+// Process audio with AI
+async function processAudioWithAI(file) {
+  try {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const response = await fetch(`/agent/chat/${SESSION_ID}`, {
+      method: "POST",
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.error || "AI conversation failed");
+    }
+
+    const result = await response.json();
+    
+    // Add user question to conversation
+    const userText = result.transcript || 'Could not transcribe audio';
+    addConversationItem('user', userText);
+    
+    // Add AI response to conversation
+    const aiText = result.response || 'No response received';
+    const isFallback = result.fallback_used || result.warning;
+    addConversationItem('assistant', aiText, isFallback);
+    
+    // Update status based on result
+    if (result.fallback_used) {
+      statusText.className = "status-text warning";
+      statusText.textContent = "⚠️ Responded with fallback due to technical issues";
+    } else if (result.warning) {
+      statusText.className = "status-text warning"; 
+      statusText.textContent = "⚠️ Response generated with some technical issues";
+    } else {
+      statusText.className = "status-text success";
+      statusText.textContent = "✅ Response complete! Ask another question";
+    }
+    
+    // Play audio response
+    if (result.audio_url) {
+      await playAudioResponse(result.audio_url);
+    }
+    
+    // Auto-start next recording after a brief delay
+    setTimeout(() => {
+      if (!isRecording && !isProcessing) {
+        updateButtonState(ButtonState.READY);
+        setTimeout(autoStartRecording, 1000);
+      }
+    }, 2000);
+    
+  } catch (error) {
+    console.error("AI processing error:", error);
+    handleError(error);
+  }
+}
+
+// Play audio response
+async function playAudioResponse(audioUrl) {
+  return new Promise((resolve) => {
+    aiAudio.src = audioUrl;
+    
+    aiAudio.oncanplay = () => {
+      aiAudio.play().catch((error) => {
+        console.error('Audio play failed:', error);
+        statusText.className = "status-text warning";
+        statusText.textContent = "⚠️ Audio generated but couldn't play automatically";
+      });
+    };
+    
+    aiAudio.onended = () => {
+      resolve();
+    };
+    
+    aiAudio.onerror = () => {
+      console.error('Audio playback failed');
+      statusText.className = "status-text warning";
+      statusText.textContent = "⚠️ Audio response failed to play";
+      resolve();
+    };
+    
+    // Timeout fallback
+    setTimeout(resolve, 10000);
+  });
+}
+
+// Auto-start recording
+function autoStartRecording() {
+  if (!isRecording && !isProcessing) {
+    startRecording();
+  }
+}
+
+// Handle microphone errors
+function handleMicrophoneError(error) {
+  let message = "Microphone error occurred";
+  
+  if (error.name === 'NotAllowedError') {
+    message = "⚠️ Microphone access denied. Please allow microphone permission and refresh.";
+  } else if (error.name === 'NotFoundError') {
+    message = "⚠️ No microphone detected. Please connect a microphone and refresh.";
+  } else if (error.name === 'NotSupportedError') {
+    message = "⚠️ Your browser doesn't support voice recording. Try Chrome, Firefox, or Safari.";
+  }
+  
+  statusText.className = "status-text error";
+  statusText.textContent = message;
+  updateButtonState(ButtonState.DISABLED);
+}
+
+// Handle general errors
+function handleError(error) {
+  let message = "Something went wrong. Please try again.";
+  
+  if (error.message.includes('fetch') || error.message.includes('network')) {
+    message = "❌ Network error. Check your connection and try again.";
+  } else if (error.message.includes('audio')) {
+    message = "❌ Audio processing failed. Please try again.";
+  }
+  
+  statusText.className = "status-text error";
+  statusText.textContent = message;
+  
+  // Reset to ready state after a delay
+  setTimeout(() => {
+    updateButtonState(ButtonState.READY);
+  }, 3000);
+}
+
+// Main button click handler
+mainRecordBtn.addEventListener("click", () => {
+  if (isProcessing) return;
+  
+  if (isRecording) {
+    stopRecording();
+  } else {
+    startRecording();
+  }
+});
+
+// Initialize UI
+function initializeUI() {
+  updateButtonState(ButtonState.READY);
+  sessionDisplay.textContent = `Session: ${SESSION_ID}`;
+  console.log('AI Voice Agent initialized with session:', SESSION_ID);
+}
+
+// Start the application
+initializeUI();
