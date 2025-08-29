@@ -9,7 +9,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from dotenv import load_dotenv
 import assemblyai as aai
-from murf import Murf
 import google.generativeai as genai
 from google.generativeai import types
 import time
@@ -24,7 +23,6 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # ---------- Load env & ensure folders ----------
-# Load from .env file in development, use environment variables in production
 load_dotenv()
 MURF_API_KEY = os.getenv("MURF_API_KEY", "")
 ASSEMBLYAI_API_KEY = os.getenv("ASSEMBLYAI_API_KEY", "")
@@ -47,7 +45,6 @@ if IS_PRODUCTION:
     logger.info("Running in production mode")
 else:
     logger.info("Running in development mode")
-    # Only show warnings in development mode
     if not MURF_API_KEY:
         logger.warning("MURF_API_KEY not set in .env")
     if not ASSEMBLYAI_API_KEY:
