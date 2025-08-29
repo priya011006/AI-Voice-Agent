@@ -78,7 +78,7 @@ uvicorn main:app --reload
 - `POST /llm/query` — Query Gemini LLM with a prompt.
 
 ---
-##📂 Project Structure
+📂 Project Structure
 
 .
 ├── main.py                # FastAPI app  
@@ -93,7 +93,7 @@ uvicorn main:app --reload
 ├── uploads/               # Audio uploads  
 └── .env                   # Environment variables (ignored in git)  
 
-## 🚀 Deployment to Render.com
+ 🚀 Deployment to Render.com
 
 ### Quick Deployment Steps
 
@@ -111,11 +111,11 @@ uvicorn main:app --reload
 
 ---
 
-##🤝 Contributing
+🤝 Contributing
 
 Pull requests and suggestions are welcome!
 
-##📜 License
+📜 License
 
 This project is licensed under the MIT License.
 
@@ -125,4 +125,4 @@ This project is licensed under the MIT License.
 
 Do you want me to also add **GitHub-style badges** (Python, FastAPI, Render, License, etc.) at the top for extra polish?
 
-# AI-Voice-Agent
+### AI-Voice-Agent
