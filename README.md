@@ -78,46 +78,42 @@ uvicorn main:app --reload
 - `POST /llm/query` — Query Gemini LLM with a prompt.
 
 ---
-
 ##📂 Project Structure
 
 .
-├── main.py                # FastAPI app
-├── requirements.txt       # Dependencies
-├── Procfile               # Deployment entrypoint
-├── render.yaml            # Render deployment config
-├── static/                # Frontend JS/CSS
-│   └── script.js
-├── templates/             # HTML templates
-│   ├── index.html
-│   └── websocket.html
-├── uploads/               # Audio uploads
-└── .env                   # Environment variables (ignored in git)
+├── main.py                # FastAPI app  
+├── requirements.txt       # Dependencies  
+├── Procfile               # Deployment entrypoint  
+├── render.yaml            # Render deployment config  
+├── static/                # Frontend JS/CSS  
+│   └── script.js  
+├── templates/             # HTML templates  
+│   ├── index.html  
+│   └── websocket.html  
+├── uploads/               # Audio uploads  
+└── .env                   # Environment variables (ignored in git)  
 
 ## 🚀 Deployment to Render.com
 
 ### Quick Deployment Steps
 
-1. Sign up for a [Render account](https://render.com/)
-2. Create a new Web Service and connect your GitHub repository
-3. Configure the following settings:
-   - **Environment**: Python
-   - **Build Command**: `pip install -r requirements.txt`
-   - **Start Command**: `uvicorn main:app --host 0.0.0.0 --port $PORT`
-4. Set the required environment variables in your Render dashboard:
-   - `GEMINI_API_KEY`: Your Google Gemini API key
-   - `ASSEMBLYAI_API_KEY`: Your AssemblyAI API key
-   - `MURF_API_KEY`: Your Murf API key
-   - `TAVILY_API_KEY`: Your Tavily API key
+1. Sign up for a [Render account](https://render.com/)  
+2. Create a new Web Service and connect your GitHub repository  
+3. Configure the following settings:  
+   - **Environment**: Python  
+   - **Build Command**: `pip install -r requirements.txt`  
+   - **Start Command**: `uvicorn main:app --host 0.0.0.0 --port $PORT`  
+4. Set the required environment variables in your Render dashboard:  
+   - `GEMINI_API_KEY`: Your Google Gemini API key  
+   - `ASSEMBLYAI_API_KEY`: Your AssemblyAI API key  
+   - `MURF_API_KEY`: Your Murf API key  
+   - `TAVILY_API_KEY`: Your Tavily API key  
 
 ---
-)
 
 ##🤝 Contributing
 
 Pull requests and suggestions are welcome!
-
-
 
 ##📜 License
 
@@ -125,9 +121,8 @@ This project is licensed under the MIT License.
 
 ---
 
-⚡Pro tip: After pasting this into `README.md`, preview it in VS Code (right-click → **Open Preview**) to see how it will look on GitHub.  
+⚡Pro tip: After pasting this into `README.md`, preview it in VS Code (right-click → **Open Preview**) to see how it will look on GitHub.
 
 Do you want me to also add **GitHub-style badges** (Python, FastAPI, Render, License, etc.) at the top for extra polish?
-
 
 # AI-Voice-Agent
